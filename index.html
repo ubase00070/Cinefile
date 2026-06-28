@@ -48077,6 +48077,37 @@ const posterCache = {};
 const personCache = {};
 const ottCache = {};
 
+// ── Lazy Load 유틸 ─────────────────────────────────────────────
+// IntersectionObserver로 뷰포트 진입 시에만 이미지 로드
+// phId: placeholder 엘리먼트 id
+// getUrlFn: () => Promise<string|null>
+// imgClass: img에 붙일 className
+// replaceMode: true면 replaceChild, false면 insertBefore+hide
+function lazyLoadImg(phId, getUrlFn, imgClass, replaceMode) {
+  const ph = document.getElementById(phId);
+  if (!ph) return;
+  const obs = new IntersectionObserver(async (entries, o) => {
+    if (!entries[0].isIntersecting) return;
+    o.disconnect();
+    const url = await getUrlFn();
+    const el = document.getElementById(phId);
+    if (!el || !url) return;
+    const img = document.createElement('img');
+    img.className = imgClass;
+    img.src = url;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.onerror = () => {};
+    if (replaceMode) {
+      el.parentNode?.replaceChild(img, el);
+    } else {
+      el.parentNode?.insertBefore(img, el);
+      el.style.display = 'none';
+    }
+  }, { rootMargin: '200px' });
+  obs.observe(ph);
+}
+
 // ── 포스터 경로 캐시 (sessionStorage 영속화 — 탭 세션 유지) ──
 const POSTER_PATH_STORE = 'frame_poster_paths_v1';
 let _posterPaths = {};
@@ -48311,21 +48342,15 @@ function renderFavorites() {
 
   body.innerHTML = html;
 
-  // async 이미지 로드
-  favMovies.forEach(async m => {
-    const url = await getTMDBPoster(m);
-    const ph = document.getElementById(`fmc-ph-${m.id}`);
-    if (ph && url) { const img=document.createElement('img'); img.className='mc-img'; img.src=url; img.alt=m.title; ph.parentNode.insertBefore(img,ph); ph.style.display='none'; }
+  // lazy load 이미지
+  favMovies.forEach(m => {
+    lazyLoadImg(`fmc-ph-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
   });
-  favDirs.forEach(async d => {
-    const url = await getTMDBPersonPhoto(d,'w185');
-    const ph = document.getElementById(`fdph-${d.id}`);
-    if (ph && url) { const img=document.createElement('img'); img.className='dir-photo'; img.src=url; img.alt=d.name; ph.parentNode.replaceChild(img,ph); }
+  favDirs.forEach(d => {
+    lazyLoadImg(`fdph-${d.id}`, () => getTMDBPersonPhoto(d, 'w185'), 'dir-photo', true);
   });
-  favActors.forEach(async a => {
-    const url = await getTMDBPersonPhoto(a,'w185');
-    const ph = document.getElementById(`faph-${a.id}`);
-    if (ph && url) { const img=document.createElement('img'); img.className='actor-photo'; img.src=url; img.alt=a.name; ph.parentNode.replaceChild(img,ph); }
+  favActors.forEach(a => {
+    lazyLoadImg(`faph-${a.id}`, () => getTMDBPersonPhoto(a, 'w185'), 'actor-photo', true);
   });
 }
 
@@ -48567,20 +48592,9 @@ function renderMoviesGrid(movies) {
         <div class="mc-rating"><span style="color:var(--text3);font-size:0.62rem;letter-spacing:0.06em">IMDb</span> ★ ${m.imdb_rating}</div>
       </div>
     </div>`).join('');
-  // load posters async
-  movies.forEach(async m => {
-    const url = await getTMDBPoster(m);
-    const ph = document.getElementById(`mc-ph-${m.id}`);
-    if (ph && url) {
-      const img = document.createElement('img');
-      img.className = 'mc-img';
-      img.src = url;
-      img.alt = m.title;
-      img.loading = 'lazy';
-      img.onerror = () => {};
-      ph.parentNode.insertBefore(img, ph);
-      ph.style.display = 'none';
-    }
+  // lazy load — 뷰포트 진입 시에만 로드, w185 썸네일 사이즈
+  movies.forEach(m => {
+    lazyLoadImg(`mc-ph-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
   });
 }
 
@@ -48739,14 +48753,8 @@ function renderTop() {
         <div class="mc-rating"><span style="color:var(--text3);font-size:0.62rem;letter-spacing:0.06em">IMDb</span> ★ ${m.imdb_rating}</div>
       </div>
     </div>`).join('');
-  tops.forEach(async m => {
-    const url = await getTMDBPoster(m, 'w500');
-    const ph = document.getElementById(`top-ph-${m.id}`);
-    if (ph && url) {
-      const img = document.createElement('img');
-      img.className='mc-img'; img.src=url; img.alt=m.title; img.loading='lazy';
-      ph.parentNode.insertBefore(img, ph); ph.style.display='none';
-    }
+  tops.forEach(m => {
+    lazyLoadImg(`top-ph-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
   });
 }
 
@@ -48763,14 +48771,8 @@ async function renderActors() {
       <div class="actor-name">${getDisplayName(a)||a.name}</div>
       <div class="actor-nat" style="color:var(--accent);letter-spacing:0.1em">${a.rising ? a.rising_label : ''}</div>
     </div>`).join('');
-  rec.forEach(async a => {
-    const url = await getTMDBPersonPhoto(a, 'w185');
-    const ph = document.getElementById(`aph-${a.id}`);
-    if (ph && url) {
-      const img = document.createElement('img');
-      img.className='actor-photo'; img.src=url; img.alt=a.name;
-      ph.parentNode.replaceChild(img, ph);
-    }
+  rec.forEach(a => {
+    lazyLoadImg(`aph-${a.id}`, () => getTMDBPersonPhoto(a, 'w185'), 'actor-photo', true);
   });
 }
 
@@ -48791,14 +48793,8 @@ function renderCollections() {
       </div>
     </div>`;}).join('');
   COLLECTIONS.forEach(c => {
-    MOVIES.filter(m=>m.collection&&m.collection.includes(c.title)).forEach(async m => {
-      const url = await getTMDBPoster(m);
-      const ph = document.getElementById(`cmc-${c.id}-${m.id}`);
-      if (ph && url) {
-        const img=document.createElement('img');
-        img.className='mc-img';img.src=url;img.alt=m.title;img.loading='lazy';
-        ph.parentNode.insertBefore(img,ph);ph.style.display='none';
-      }
+    MOVIES.filter(m=>m.collection&&m.collection.includes(c.title)).forEach(m => {
+      lazyLoadImg(`cmc-${c.id}-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
     });
   });
 }
@@ -49059,14 +49055,8 @@ async function renderPersonDetail({type, id}) {
     requestAnimationFrame(() => drawMindmapLines(id, (person.gallery||[]).length, cx, cy));
   }
 
-  films.forEach(async m => {
-    const url = await getTMDBPoster(m);
-    const ph = document.getElementById(`pfm-${m.id}`);
-    if (ph && url) {
-      const img=document.createElement('img');
-      img.className='mc-img';img.src=url;img.alt=m.title;img.loading='lazy';
-      ph.parentNode.insertBefore(img,ph);ph.style.display='none';
-    }
+  films.forEach(m => {
+    lazyLoadImg(`pfm-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
   });
 }
 
@@ -49131,14 +49121,9 @@ function handleSearch(q) {
         </div>
       </div>`).join('')
       : '<div style="padding:3rem;color:var(--text3);font-size:0.85rem;text-align:center">검색 결과가 없습니다</div>';
-    // 포스터는 백그라운드
-    results.forEach(async m => {
-      const url = await getTMDBPoster(m);
-      const ph = document.getElementById(`sq-${m.id}`);
-      if (ph && url) {
-        const img=document.createElement('img'); img.className='mc-img';img.src=url;img.alt=m.title;img.loading='lazy';
-        ph.parentNode.insertBefore(img,ph); ph.style.display='none';
-      }
+    // 포스터는 백그라운드 — lazy load
+    results.forEach(m => {
+      lazyLoadImg(`sq-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
     });
   }
 }
