@@ -38,6 +38,66 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-weig
 @media(max-width:1200px){.nav-links{gap:0.35rem}.nav-links a{font-size:0.68rem;letter-spacing:0.04em}#nav-search{width:90px}#nav-search:focus{width:130px}}
 @media(max-width:960px){.nav-links a{font-size:0.62rem;letter-spacing:0.02em}.nav-logo span{display:none}}
 
+/* ── 모바일 햄버거 NAV ── */
+#nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;margin-left:auto;flex-shrink:0;background:none;border:none}
+#nav-hamburger span{display:block;width:22px;height:2px;background:var(--text2);border-radius:2px;transition:all 0.25s}
+#nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+#nav-hamburger.open span:nth-child(2){opacity:0}
+#nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+#nav-mobile-drawer{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(10,10,10,0.97);z-index:99;flex-direction:column;padding:1.5rem 2rem;gap:0;overflow-y:auto}
+#nav-mobile-drawer.open{display:flex}
+#nav-mobile-drawer li{list-style:none;border-bottom:1px solid var(--border)}
+#nav-mobile-drawer li a{display:block;padding:1rem 0;font-size:1rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text2);cursor:pointer;text-decoration:none}
+#nav-mobile-drawer li a.active,#nav-mobile-drawer li a:active{color:var(--accent)}
+#nav-mobile-drawer .mob-toggle-row{display:flex;align-items:center;gap:1rem;padding:1.2rem 0;border-bottom:1px solid var(--border)}
+#nav-mobile-drawer .mob-search{width:100%;background:none;border:1px solid var(--border2);padding:8px 14px;color:var(--text);font-family:var(--font-ui);font-size:0.85rem;border-radius:20px;outline:none;margin-top:1rem}
+#nav-mobile-drawer .mob-search:focus{border-color:var(--accent)}
+
+@media(max-width:680px){
+  #nav{padding:0 1rem;height:56px}
+  #page-wrap{padding-top:56px}
+  .nav-links,#nav-search,.name-toggle-btn{display:none!important}
+  #nav-hamburger{display:flex}
+  /* 그리드 3열 */
+  .movies-grid{grid-template-columns:repeat(3,1fr);gap:0.6rem}
+  .actors-grid{grid-template-columns:repeat(3,1fr);gap:0.8rem}
+  .coll-movies{grid-template-columns:repeat(3,1fr);gap:0.5rem}
+  .search-grid{grid-template-columns:repeat(3,1fr);gap:0.6rem}
+  .person-films-grid{grid-template-columns:repeat(3,1fr);gap:0.6rem}
+  /* 카드 텍스트 축소 */
+  .mc-title{font-size:0.72rem}
+  .mc-meta{font-size:0.58rem}
+  .mc-rating{font-size:0.58rem}
+  .mc-body{padding:0.4rem 0 0}
+  /* 피처드 카드 세로 스택 */
+  .featured-card{grid-template-columns:1fr}
+  .featured-poster{width:100%;max-height:260px;aspect-ratio:auto}
+  .featured-poster-ph{width:100%;aspect-ratio:16/9}
+  .featured-info{padding:1.25rem}
+  .feat-title-ko{font-size:1.6rem}
+  /* 모달 */
+  .modal-meta-grid{grid-template-columns:repeat(2,1fr)}
+  .related-grid{grid-template-columns:repeat(3,1fr)}
+  /* 인물 페이지 */
+  .person-hero{grid-template-columns:1fr;gap:1.5rem}
+  .person-photo-lg,.person-photo-lg-ph{width:140px;height:140px}
+  /* 배우 카드 */
+  .actor-name{font-size:0.7rem}
+  /* 에세이 */
+  .essay-item{grid-template-columns:1fr;gap:0.5rem}
+  /* 섹션 패딩 */
+  #page-movies,#page-top,#page-actors,#page-all,#page-essays,#page-favorites,#page-search{padding:1.5rem 0.9rem}
+  #page-top{padding:1.5rem 0.9rem}
+  .home-featured{padding:2rem 0.9rem}
+  /* 히어로 */
+  .hero-title{font-size:2rem}
+  .hero-stats{gap:2rem}
+  .hero-stat-num{font-size:2.5rem}
+  /* 전체목록 테이블 */
+  .all-table{font-size:0.72rem}
+  .all-table th,.all-table td{padding:0.5rem 0.6rem}
+}
+
 /* TRANSITIONS */
 #page-wrap{padding-top:64px;min-height:100vh}
 .page{display:none;opacity:0;transition:opacity 0.35s var(--ease-out)}
@@ -360,7 +420,31 @@ footer{padding:2.5rem 2.5rem;border-top:1px solid var(--border);display:flex;jus
     <div class="name-toggle-opt active" id="tog-ko" onclick="setNameLang('ko')">한글</div>
   </div>
   <input id="nav-search" type="text" placeholder="영화, 배우 검색..." oninput="debounceSearch(this.value)" style="margin-left:0.75rem">
+  <!-- 모바일 햄버거 -->
+  <button id="nav-hamburger" onclick="toggleMobileNav()" aria-label="메뉴">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<!-- 모바일 드로어 -->
+<div id="nav-mobile-drawer">
+  <ul>
+    <li><a onclick="mobileGoTo('home')" data-mob-page="home">홈</a></li>
+    <li><a onclick="mobileGoTo('movies')" data-mob-page="movies">추천 영화</a></li>
+    <li><a onclick="mobileGoTo('top')" data-mob-page="top">최애 작품</a></li>
+    <li><a onclick="mobileGoTo('actors')" data-mob-page="actors">배우</a></li>
+    <li><a onclick="mobileGoTo('all')" data-mob-page="all">전체 목록</a></li>
+    <li><a onclick="mobileGoTo('essays')" data-mob-page="essays">영화광의 소회</a></li>
+    <li><a onclick="mobileGoTo('favorites')" data-mob-page="favorites">★ 즐겨찾기</a></li>
+  </ul>
+  <div class="mob-toggle-row">
+    <span style="font-size:0.75rem;color:var(--text3);letter-spacing:0.1em">제목 표기</span>
+    <div class="name-toggle-btn">
+      <div class="name-toggle-opt" id="mob-tog-orig" onclick="setNameLang('orig');document.getElementById('mob-tog-orig').classList.add('active');document.getElementById('mob-tog-ko').classList.remove('active')">원문</div>
+      <div class="name-toggle-opt active" id="mob-tog-ko" onclick="setNameLang('ko');document.getElementById('mob-tog-ko').classList.add('active');document.getElementById('mob-tog-orig').classList.remove('active')">한글</div>
+    </div>
+  </div>
+  <input class="mob-search" type="text" placeholder="영화, 배우 검색..." oninput="debounceSearch(this.value)">
+</div>
 
 <div id="page-wrap">
   <div id="page-home" class="page">
@@ -48058,6 +48142,8 @@ function renderSlider(slides, containerId) {
     <button class="slider-btn slider-btn-r" onclick="slideMove(1)">&#8250;</button>
     <div class="slider-dots">${slides.map((_,i)=>`<div class="slider-dot${i===0?' active':''}" onclick="slideTo(${i})"></div>`).join('')}</div>
     <div class="slider-count"><span id="slider-cur">1</span>/${slides.length}</div>` : ''}`;
+  // 모바일 터치 스와이프 활성화
+  if (_sliderSlides.length > 1) initSliderTouch(containerId);
 }
 function slideMove(dir) {
   slideTo((_sliderIdx + dir + _sliderSlides.length) % _sliderSlides.length);
@@ -48069,6 +48155,48 @@ function slideTo(i) {
   document.querySelectorAll('.slider-dot').forEach((d,j) => d.classList.toggle('active', j===i));
   const cur = document.getElementById('slider-cur');
   if (cur) cur.textContent = i+1;
+}
+
+// ── 슬라이더 터치 스와이프 ──────────────────────────────────────
+function initSliderTouch(containerId) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  let startX = 0, startY = 0, isDragging = false;
+  wrap.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+  }, { passive: true });
+  wrap.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      slideMove(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+}
+
+// ── 모바일 햄버거 메뉴 ──────────────────────────────────────────
+function toggleMobileNav() {
+  const btn = document.getElementById('nav-hamburger');
+  const drawer = document.getElementById('nav-mobile-drawer');
+  const isOpen = drawer.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobileNav() {
+  document.getElementById('nav-hamburger')?.classList.remove('open');
+  document.getElementById('nav-mobile-drawer')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function mobileGoTo(page) {
+  closeMobileNav();
+  goTo(page);
+  // 모바일 드로어 active 표시
+  document.querySelectorAll('[data-mob-page]').forEach(a =>
+    a.classList.toggle('active', a.dataset.mobPage === page));
 }
 // ═══════════════════════════════════════════════
 // TMDB IMAGE HELPERS
@@ -48383,6 +48511,8 @@ function _render(page, data, oldEl) {
   currentPage = page;
   document.querySelectorAll('.nav-links a').forEach(a =>
     a.classList.toggle('active', a.dataset.page === page));
+  document.querySelectorAll('[data-mob-page]').forEach(a =>
+    a.classList.toggle('active', a.dataset.mobPage === page));
   window.scrollTo({top:0, behavior:'smooth'});
   if (page !== 'search') { const ns=document.getElementById('nav-search'); if(ns) ns.value=''; }
   if (data) {
