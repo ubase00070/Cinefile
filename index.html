@@ -48162,7 +48162,7 @@ async function getTMDBPoster(movie, size='w500') {
   } catch { return null; }
 }
 
-async function getTMDBPersonPhoto(person, size='w185') {
+async function getTMDBPersonPhoto(person, size='w342') {
   if (!TMDB_KEY || TMDB_KEY === 'YOUR_TMDB_API_KEY') return null;
   const k = person.id;
   if (personCache[k] !== undefined) return personCache[k];
@@ -48344,13 +48344,13 @@ function renderFavorites() {
 
   // lazy load 이미지
   favMovies.forEach(m => {
-    lazyLoadImg(`fmc-ph-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
+    lazyLoadImg(`fmc-ph-${m.id}`, () => getTMDBPoster(m, 'w342'), 'mc-img', false);
   });
   favDirs.forEach(d => {
-    lazyLoadImg(`fdph-${d.id}`, () => getTMDBPersonPhoto(d, 'w185'), 'dir-photo', true);
+    lazyLoadImg(`fdph-${d.id}`, () => getTMDBPersonPhoto(d, 'w342'), 'dir-photo', true);
   });
   favActors.forEach(a => {
-    lazyLoadImg(`faph-${a.id}`, () => getTMDBPersonPhoto(a, 'w185'), 'actor-photo', true);
+    lazyLoadImg(`faph-${a.id}`, () => getTMDBPersonPhoto(a, 'w342'), 'actor-photo', true);
   });
 }
 
@@ -48592,9 +48592,9 @@ function renderMoviesGrid(movies) {
         <div class="mc-rating"><span style="color:var(--text3);font-size:0.62rem;letter-spacing:0.06em">IMDb</span> ★ ${m.imdb_rating}</div>
       </div>
     </div>`).join('');
-  // lazy load — 뷰포트 진입 시에만 로드, w185 썸네일 사이즈
+  // lazy load — 뷰포트 진입 시에만 로드, w342 썸네일 사이즈
   movies.forEach(m => {
-    lazyLoadImg(`mc-ph-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
+    lazyLoadImg(`mc-ph-${m.id}`, () => getTMDBPoster(m, 'w342'), 'mc-img', false);
   });
 }
 
@@ -48754,7 +48754,7 @@ function renderTop() {
       </div>
     </div>`).join('');
   tops.forEach(m => {
-    lazyLoadImg(`top-ph-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
+    lazyLoadImg(`top-ph-${m.id}`, () => getTMDBPoster(m, 'w342'), 'mc-img', false);
   });
 }
 
@@ -48772,7 +48772,7 @@ async function renderActors() {
       <div class="actor-nat" style="color:var(--accent);letter-spacing:0.1em">${a.rising ? a.rising_label : ''}</div>
     </div>`).join('');
   rec.forEach(a => {
-    lazyLoadImg(`aph-${a.id}`, () => getTMDBPersonPhoto(a, 'w185'), 'actor-photo', true);
+    lazyLoadImg(`aph-${a.id}`, () => getTMDBPersonPhoto(a, 'w342'), 'actor-photo', true);
   });
 }
 
@@ -48794,7 +48794,7 @@ function renderCollections() {
     </div>`;}).join('');
   COLLECTIONS.forEach(c => {
     MOVIES.filter(m=>m.collection&&m.collection.includes(c.title)).forEach(m => {
-      lazyLoadImg(`cmc-${c.id}-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
+      lazyLoadImg(`cmc-${c.id}-${m.id}`, () => getTMDBPoster(m, 'w342'), 'mc-img', false);
     });
   });
 }
@@ -49056,7 +49056,7 @@ async function renderPersonDetail({type, id}) {
   }
 
   films.forEach(m => {
-    lazyLoadImg(`pfm-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
+    lazyLoadImg(`pfm-${m.id}`, () => getTMDBPoster(m, 'w342'), 'mc-img', false);
   });
 }
 
@@ -49123,7 +49123,7 @@ function handleSearch(q) {
       : '<div style="padding:3rem;color:var(--text3);font-size:0.85rem;text-align:center">검색 결과가 없습니다</div>';
     // 포스터는 백그라운드 — lazy load
     results.forEach(m => {
-      lazyLoadImg(`sq-${m.id}`, () => getTMDBPoster(m, 'w185'), 'mc-img', false);
+      lazyLoadImg(`sq-${m.id}`, () => getTMDBPoster(m, 'w342'), 'mc-img', false);
     });
   }
 }
