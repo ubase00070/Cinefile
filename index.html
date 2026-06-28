@@ -28,13 +28,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-weig
 #nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;padding:0 2rem;height:64px;background:rgba(10,10,10,0.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);gap:0}
 .nav-logo{font-family:var(--font-title);font-size:1.5rem;letter-spacing:0.15em;color:var(--accent);cursor:pointer;user-select:none;line-height:1}
 .nav-logo span{color:var(--text3);font-size:0.62rem;font-family:var(--font-ui);letter-spacing:0.2em;display:block;margin-top:2px;text-transform:uppercase}
-.nav-links{display:flex;gap:1rem;list-style:none;align-items:center;flex:1;min-width:0;padding:0 1rem}
-.nav-links a{color:var(--text2);text-decoration:none;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;cursor:pointer;padding-bottom:2px}
+.nav-links{display:flex;gap:0.6rem;list-style:none;align-items:center;flex:1;min-width:0;padding:0 0.5rem;overflow:hidden}
+.nav-links a{color:var(--text2);text-decoration:none;font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;transition:color 0.2s;cursor:pointer;padding-bottom:2px;white-space:nowrap}
 .nav-links a:hover,.nav-links a.active{color:var(--accent)}
 .nav-links a.active{border-bottom:1px solid var(--accent)}
-#nav-search{background:none;border:1px solid var(--border2);padding:5px 12px;color:var(--text);font-family:var(--font-ui);font-size:0.75rem;width:140px;transition:width 0.2s,border-color 0.2s;outline:none;border-radius:20px;flex-shrink:0}
-#nav-search:focus{border-color:var(--accent);width:220px}
+#nav-search{background:none;border:1px solid var(--border2);padding:5px 12px;color:var(--text);font-family:var(--font-ui);font-size:0.75rem;width:120px;transition:width 0.2s,border-color 0.2s;outline:none;border-radius:20px;flex-shrink:0}
+#nav-search:focus{border-color:var(--accent);width:180px}
 #nav-search::placeholder{color:var(--text3)}
+@media(max-width:1200px){.nav-links{gap:0.35rem}.nav-links a{font-size:0.68rem;letter-spacing:0.04em}#nav-search{width:90px}#nav-search:focus{width:130px}}
+@media(max-width:960px){.nav-links a{font-size:0.62rem;letter-spacing:0.02em}.nav-logo span{display:none}}
 
 /* TRANSITIONS */
 #page-wrap{padding-top:64px;min-height:100vh}
@@ -48075,6 +48077,14 @@ const posterCache = {};
 const personCache = {};
 const ottCache = {};
 
+// ── 포스터 경로 캐시 (sessionStorage 영속화 — 탭 세션 유지) ──
+const POSTER_PATH_STORE = 'frame_poster_paths_v1';
+let _posterPaths = {};
+try { _posterPaths = JSON.parse(sessionStorage.getItem(POSTER_PATH_STORE) || '{}'); } catch(e) {}
+function _savePosterPaths() {
+  try { sessionStorage.setItem(POSTER_PATH_STORE, JSON.stringify(_posterPaths)); } catch(e) {}
+}
+
 function fetchT(url) {
   return Promise.race([
     fetch(url),
@@ -48085,18 +48095,26 @@ function fetchT(url) {
 async function getTMDBPoster(movie, size='w500') {
   if (!TMDB_KEY || TMDB_KEY === 'YOUR_TMDB_API_KEY') return null;
   const k = movie.id;
+  // 메모리 캐시 히트
   if (posterCache[k] !== undefined) return posterCache[k];
   posterCache[k] = null;
   if (movie.poster_custom) { posterCache[k]=movie.poster_custom; return movie.poster_custom; }
+  // JSON에 poster_path 필드가 있으면 API 호출 없이 즉시 반환
+  if (movie.poster_path) {
+    posterCache[k] = `${TMDB_IMG}${size}${movie.poster_path}`;
+    return posterCache[k];
+  }
+  // sessionStorage 캐시 히트 (새로고침 후에도 재사용)
+  if (_posterPaths[k]) {
+    posterCache[k] = `${TMDB_IMG}${size}${_posterPaths[k]}`;
+    return posterCache[k];
+  }
   try {
     let path = null;
     if (movie.tmdb_id) {
-      // 한국어 포스터 우선, 없으면 기본(영어)
-      const [dKo, dEn] = await Promise.all([
-        fetchT(`${TMDB_BASE}/movie/${movie.tmdb_id}?api_key=${TMDB_KEY}&language=ko-KR`).then(r=>r.json()).catch(()=>null),
-        fetchT(`${TMDB_BASE}/movie/${movie.tmdb_id}?api_key=${TMDB_KEY}`).then(r=>r.json()).catch(()=>null),
-      ]);
-      path = dKo?.poster_path || dEn?.poster_path || null;
+      // API 1회 호출 (ko-KR 언어 포함) — poster_path는 언어 무관하므로 1번으로 충분
+      const d = await fetchT(`${TMDB_BASE}/movie/${movie.tmdb_id}?api_key=${TMDB_KEY}&language=ko-KR`).then(r=>r.json()).catch(()=>null);
+      path = d?.poster_path || null;
     }
     if (!path) {
       const q = encodeURIComponent(movie.original_title);
@@ -48106,6 +48124,8 @@ async function getTMDBPoster(movie, size='w500') {
       if (hit?.id) movie.tmdb_id = hit.id;
     }
     if (!path) return null;
+    _posterPaths[k] = path;
+    _savePosterPaths();
     posterCache[k] = `${TMDB_IMG}${size}${path}`;
     return posterCache[k];
   } catch { return null; }
