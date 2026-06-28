@@ -48795,8 +48795,12 @@ async function openModal(id) {
   document.body.style.overflow = 'hidden';
 
   // ── 2단계: 이미지/OTT 백그라운드 로드 ───────────
+  // 모바일에서는 w342, 데스크탑은 w780
+  const isMobile = window.innerWidth <= 900;
+  const posterSize = isMobile ? 'w342' : 'w780';
+
   // 포스터 or 슬라이더
-  getTMDBPoster(m, 'w780').then(posterUrl => {
+  getTMDBPoster(m, posterSize).then(posterUrl => {
     const area = document.getElementById('modal-poster-area');
     if (!area) return;
     const slides = m.backdrops || [];
@@ -48812,20 +48816,38 @@ async function openModal(id) {
     }
   });
 
-  // 배우 사진
-  m.cast.forEach(async c => {
-    const a = ACTORS.find(x=>x.id===c.actor);
-    if (!a) return;
-    const photoUrl = await getTMDBPersonPhoto(a);
-    if (!photoUrl) return;
-    const el = document.getElementById(`ca-${c.actor}`);
-    if (el) {
-      const img = document.createElement('img');
-      img.className = 'cast-avatar';
-      img.src = photoUrl; img.alt = a.name;
-      el.parentNode.replaceChild(img, el);
-    }
-  });
+  // 배우 사진 — 모바일에서는 순차 로드 (동시 요청 폭발 방지)
+  if (isMobile) {
+    (async () => {
+      for (const c of m.cast) {
+        const a = ACTORS.find(x=>x.id===c.actor);
+        if (!a) continue;
+        const photoUrl = await getTMDBPersonPhoto(a);
+        if (!photoUrl) continue;
+        const el = document.getElementById(`ca-${c.actor}`);
+        if (el) {
+          const img = document.createElement('img');
+          img.className = 'cast-avatar';
+          img.src = photoUrl; img.alt = a.name;
+          el.parentNode?.replaceChild(img, el);
+        }
+      }
+    })();
+  } else {
+    m.cast.forEach(async c => {
+      const a = ACTORS.find(x=>x.id===c.actor);
+      if (!a) return;
+      const photoUrl = await getTMDBPersonPhoto(a);
+      if (!photoUrl) return;
+      const el = document.getElementById(`ca-${c.actor}`);
+      if (el) {
+        const img = document.createElement('img');
+        img.className = 'cast-avatar';
+        img.src = photoUrl; img.alt = a.name;
+        el.parentNode.replaceChild(img, el);
+      }
+    });
+  }
 
   // OTT
   getWatchProviders(m).then(kr => {
