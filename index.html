@@ -453,8 +453,8 @@ footer{padding:2.5rem 2.5rem;border-top:1px solid var(--border);display:flex;jus
       <div class="hero-bg"></div>
       <div class="hero-lines"></div>
       <div class="hero-stats" id="hero-stats"></div>
-      <h1 class="hero-title">어마어마한 영화광이 만든<br>해외 영화 컬렉션</h1>
-      <p class="hero-sub">9년을 달려온 수 천편의 여정은 계속된다<br>(되도록이면 데스크탑 환경에서 열람 권장)</p>
+      <h1 class="hero-title">지독한 영화광이 만든<br>해외 영화 컬렉션</h1>
+      <p class="hero-sub">9년을 달려온 수 천편의 여정은 계속된다</p>
       <div class="hero-cta">
         <button class="btn btn-primary" onclick="goTo('movies')">추천 영화</button>
         <button class="btn btn-ghost" onclick="goTo('essays')">영화광의 소회</button>
@@ -499,7 +499,7 @@ footer{padding:2.5rem 2.5rem;border-top:1px solid var(--border);display:flex;jus
 
   <div id="page-all" class="page">
     <div class="section-eyebrow">전체 목록</div>
-    <h2 class="section-title">전체 추천 목록</h2>
+    <h2 class="section-title">작품 목록</h2>
     <table class="all-table">
       <thead><tr>
         <th onclick="sortTable('title')">제목 ↕</th>
@@ -624,7 +624,7 @@ function toKoCountry(str) {
   return str.split('/').map(s => COUNTRY_MAP[s.trim()] || s.trim()).join('/');
 }
 
-const TMDB_KEY = '5c8b1ca43d368297ecb02998549f3f37';   // 5c8b... 입력
+const TMDB_KEY = '5c8b1ca43d368297ecb02998549f3f37';  
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/';
 
